@@ -1,8 +1,5 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
+  <img alt="Vue logo" src="./assets/logo.png">
   <router-view/>
 </template>
 
@@ -15,16 +12,20 @@
   color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
+.btnMargin {
+  margin-top: 2rem;
 }
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
+.cell {
+  margin: 2px 0;
+  display: inline-block;
 }
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+.cellTitle {
+  width: 120px;
+}
+
+.cellInput {
+  width: 200px;
 }
 </style>
