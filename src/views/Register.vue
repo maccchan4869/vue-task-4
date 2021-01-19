@@ -13,13 +13,12 @@
       <div class="cell cellTitle">パスワード</div>
       <div class="cell cellInput"><input type="password" placeholder="Password" v-model="password"></div>
     </div>
-    <input type="button" class="btn btn-outline-primary btnMargin" value="新規登録" @click="registerAccount">
+    <input type="button" class="btn btn-outline-primary btnMargin" value="新規登録" @click="clickRegister">
     <p><router-link to="/">ログインはこちら</router-link></p>
   </div>
 </template>
 
 <script>
-import firebase from 'firebase'
 
 export default {
   name: 'register',
@@ -32,30 +31,13 @@ export default {
   },
   methods: {
     // アカウントを作成
-    async registerAccount() {
-      await firebase.auth().createUserWithEmailAndPassword(this.email, this.password).catch(error => {
-        alert(error.message);
+    clickRegister() {
+      this.$store.dispatch('registerAccount', {
+        displayName : this.displayName,
+        email: this.email,
+        password: this.password
       });
-      this.registerUserInfo();
-    },
-
-    // ユーザ情報を登録
-    async registerUserInfo() {
-      const user = firebase.auth().currentUser;
-      if (user != null) {
-        await user.updateProfile({
-          displayName: this.displayName
-        }).catch(error => {
-          alert(error.message);
-        });
-        // デバック用
-        const ret = firebase.auth().currentUser;
-        if (ret != null) {
-          alert(`登録したユーザー名は${ret.displayName}`);
-          alert(`登録したメールアドレスは${ret.email}`);
-        }
-      }
-    },
+    }
   }
 }
 </script>
