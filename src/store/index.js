@@ -3,34 +3,32 @@ import firebase from 'firebase'
 
 export default createStore({
   state: {
-    loginUserName: ''
+    loginUser: {
+      uid: '',
+      userName: '',
+      wallet: 0
+    }
   },
   mutations: {
-    commitLoginUserName(state, val) {
-      state.loginUserName = val;
+    commitLoginUser(state, val) {
+      state.loginUser = val;
     }
   },
   actions: {
-    // アカウントを作成
-    async registerAccount({ dispatch }, {displayName, email, password}) {
+    // 新規登録
+    async registerAccount({ commit }, {displayName, email, password}) {
       try {
+        const initWallet = 2000;
         await firebase.auth().createUserWithEmailAndPassword(email, password);
-        dispatch('updateUserName', displayName);
+        const uid = firebase.auth().currentUser.uid;
+        firebase.firestore().collection('users').doc(uid).set({
+          uid: uid,
+          userName: displayName,
+          wallet: initWallet
+        })
+        commit('commitLoginUser', {uid: uid, userName: displayName, wallet: initWallet});
       } catch (error) {
-        console.log(error.message);
-      }
-    },
-
-    // ユーザー名を更新
-    async updateUserName({ commit }, displayName) {
-      try {
-        commit('commitLoginUserName', displayName);
-        const user = firebase.auth().currentUser;
-        if(user === null) return;
-        await user.updateProfile({displayName: displayName});
-        alert(`ユーザー名を「${displayName}」に更新しました`);
-      } catch (error) {
-        console.log(error.message);
+        throw error.message;
       }
     },
 
@@ -38,16 +36,19 @@ export default createStore({
     async login({ commit }, {email, password}) {
       try {
         await firebase.auth().signInWithEmailAndPassword(email, password);
-        const user = firebase.auth().currentUser;
-        if(user === null) return;
-        commit('commitLoginUserName', user.displayName);
-        // デバック用（後にページ遷移処理に変更）
-        alert(`ユーザー名「${user.displayName}」でログインしました`);
+        const uid = firebase.auth().currentUser.uid;
+        const dataDoc = await firebase.firestore().collection('users').doc(uid).get();
+        commit('commitLoginUser', {uid: uid, userName: dataDoc.get('userName'), wallet: dataDoc.get('wallet')});
       } catch (error) {
-        console.log(error.message);
+        throw error.message;
       }
     },
   },
   modules: {
+  },
+  getters: {
+    getLoginUser: state => {
+      return state.loginUser;
+    }
   }
 })

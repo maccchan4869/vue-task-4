@@ -13,7 +13,7 @@
       <div class="cell cellTitle">パスワード</div>
       <div class="cell cellInput"><input type="password" placeholder="Password" v-model="password"></div>
     </div>
-    <input type="button" class="btn btn-outline-primary btnMargin" value="新規登録" @click="clickRegister">
+    <input type="button" class="btn btn-outline-primary btnMargin" value="新規登録" @click="validationInputData">
     <p><router-link to="/">ログインはこちら</router-link></p>
   </div>
 </template>
@@ -30,13 +30,27 @@ export default {
     }
   },
   methods: {
+    // 入力データチェック
+    validationInputData() {
+      if(!this.displayName || !this.email || !this.password) {
+        console.error('必須項目が入力されていません');
+        return;
+      }
+      this.clickRegister();
+    },
+
     // アカウントを作成
-    clickRegister() {
-      this.$store.dispatch('registerAccount', {
-        displayName : this.displayName,
-        email: this.email,
-        password: this.password
-      });
+    async clickRegister() {
+      try {
+        await this.$store.dispatch('registerAccount', {
+          displayName : this.displayName,
+          email: this.email,
+          password: this.password
+        });
+        this.$router.push('/dashboard');
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 }
