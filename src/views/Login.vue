@@ -25,11 +25,16 @@ export default {
   },
   methods: {
     // ログイン
-    clickLogin() {
-      this.$store.dispatch('login', {
-        email: this.email,
-        password: this.password
-      });
+    async clickLogin() {
+      try {
+        await this.$store.dispatch('login', {
+          email: this.email,
+          password: this.password
+        });
+        this.$router.push('/dashboard');
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 }
