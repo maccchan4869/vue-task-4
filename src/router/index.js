@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Dashboard from '../views/Dashboard.vue'
+import Store from '../store'
 
 const routes = [
   {
@@ -31,7 +32,19 @@ const routes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    component: Dashboard
+    component: Dashboard,
+    beforeEnter: (to, from, next) => {
+      const loginUser = Store.getters.getLoginUser;
+      if(!loginUser.uid) {
+        next({path: '/'});
+      } else {
+        next();
+      }
+    }
+  },
+  {
+    path: "/:catchAll(.*)",
+    redirect: '/'
   }
 ]
 
