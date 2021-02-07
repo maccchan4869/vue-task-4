@@ -5,24 +5,47 @@
       <div class="divWallet">残高：{{ loginUser.wallet }}</div>
       <input type="button" class="btn btn-outline-primary btnLogout" value="ログアウト" @click="logout">
     </div>
+    <h1 class="userListTitle">ユーザー一覧</h1>
+    <div class="otherUserInfo">
+      <div class="userNameTitle">ユーザー名</div>
+      <ul>
+        <li v-for="otherUser in otherUsers" v-bind:key="otherUser.uid">
+          <div class="cell divUserName">{{ otherUser.userName }}</div>
+          <div class="cell btnDispWallet"><input type="button" class="btn btn-info" value="walletを見る" @click="openWalletModal(otherUser)"></div>
+          <div class="cell btnSendWallet"><input type="button" class="btn btn-info" value="送る"></div>
+        </li>
+      </ul>
+    </div>
+    <transition name="modal">
+      <WalletModal :val="otherUser" @close="closeWalletModal" v-if="isDispWallet"></WalletModal>
+    </transition>
   </div>
 </template>
 
 <script>
 import firebase from 'firebase'
+import WalletModal from '@/components/WalletModal.vue'
 export default {
   name: 'dashboard',
   data () {
     return {
+      otherUser: null,
+      otherUsers: [],
       loginUser: {
         uid: '',
         userName: '',
         wallet: 0
-      }
+      },
+      isDispWallet: false,
     }
   },
   created() {
-    this.loginUser = this.$store.getters.getLoginUser;
+    const users = this.$store.getters.getUsers;
+    this.loginUser = users.loginUser;
+    this.otherUsers = users.otherUsers;
+  },
+  components: {
+    WalletModal
   },
   methods: {
     // ログアウト
@@ -35,6 +58,14 @@ export default {
       } catch (error) {
         console.error(error.message);
       }
+    },
+    // Walletを確認する
+    openWalletModal(item) {
+      this.isDispWallet = true;
+      this.otherUser = item;
+    },
+    closeWalletModal() {
+      this.isDispWallet = false;
     },
   }
 }
@@ -50,4 +81,64 @@ export default {
 .btnLogout {
   display: inline-block;
 }
+
+.otherUserInfo {
+  font-size: 20px;
+  text-align: left;
+  margin: 0 20%;
+}
+
+.otherUserInfo ul{
+  list-style: none;
+}
+
+.otherUserInfo .userNameTitle {
+  text-align: center;
+  width: 30%;
+  font-weight: bold;
+}
+
+.otherUserInfo .divUserName {
+  text-align: center;
+  width: 15%;
+}
+
+.otherUserInfo .btnDispWallet {
+  width: 60%;
+  padding-left: 35%;
+}
+
+.otherUserInfo .btnSendWallet {
+  width: 25%;
+}
+
+.userListTitle {
+  margin: 15px 0;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: 1s;
+}
+
+.modal-enter-active .modalWindow,
+.modal-leave-active .modalWindow{
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+.modal-leave-active {
+  transition: opacity 0.6s ease 0.4s;
+}
+
+.modal-enter-from .modalWindow,
+.modal-leave-to .modalWindow {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
 </style>
