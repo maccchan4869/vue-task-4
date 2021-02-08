@@ -7,11 +7,15 @@ export default createStore({
       uid: '',
       userName: '',
       wallet: 0
-    }
+    },
+    otherUsers: [],
   },
   mutations: {
     commitLoginUser(state, val) {
       state.loginUser = val;
+    },
+    commitOtherUsers(state, val) {
+      state.otherUsers = val;
     }
   },
   actions: {
@@ -19,7 +23,13 @@ export default createStore({
     async registerAccount({ commit }, {displayName, email, password}) {
       try {
         const initWallet = 2000;
+        const otherUsers = [];
         await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const users = await firebase.firestore().collection('users').get();
+        users.forEach((userDoc) => {
+          otherUsers.push({uid: userDoc.get('uid'), userName: userDoc.get('userName'), wallet: userDoc.get('wallet')})
+        });
+        commit('commitOtherUsers', otherUsers);
         const uid = firebase.auth().currentUser.uid;
         firebase.firestore().collection('users').doc(uid).set({
           uid: uid,
@@ -35,10 +45,18 @@ export default createStore({
     // ログイン
     async login({ commit }, {email, password}) {
       try {
+        const otherUsers = [];
         await firebase.auth().signInWithEmailAndPassword(email, password);
         const uid = firebase.auth().currentUser.uid;
-        const dataDoc = await firebase.firestore().collection('users').doc(uid).get();
-        commit('commitLoginUser', {uid: uid, userName: dataDoc.get('userName'), wallet: dataDoc.get('wallet')});
+        const users = await firebase.firestore().collection('users').get();
+        users.forEach((userDoc) => {
+          if(userDoc.id === uid) {
+            commit('commitLoginUser', {uid: userDoc.get('uid'), userName: userDoc.get('userName'), wallet: userDoc.get('wallet')});
+          } else {
+            otherUsers.push({uid: userDoc.get('uid'), userName: userDoc.get('userName'), wallet: userDoc.get('wallet')});
+          }
+        });
+        commit('commitOtherUsers', otherUsers);
       } catch (error) {
         throw error.message;
       }
@@ -49,6 +67,12 @@ export default createStore({
   getters: {
     getLoginUser: state => {
       return state.loginUser;
-    }
+    },
+    getUsers: state => {
+      return {
+        loginUser: state.loginUser,
+        otherUsers: state.otherUsers
+      };
+    },
   }
 })
