@@ -12,19 +12,21 @@
         <li v-for="otherUser in otherUsers" v-bind:key="otherUser.uid">
           <div class="cell divUserName">{{ otherUser.userName }}</div>
           <div class="cell btnDispWallet"><input type="button" class="btn btn-info" value="walletを見る" @click="openWalletModal(otherUser)"></div>
-          <div class="cell btnSendWallet"><input type="button" class="btn btn-info" value="送る"></div>
+          <div class="cell btnSendWallet"><input type="button" class="btn btn-info" value="送る" @click="openSendModal(otherUser)"></div>
         </li>
       </ul>
     </div>
-    <transition name="modal">
+    <transition-group  name="modal">
       <WalletModal :val="otherUser" @close="closeWalletModal" v-if="isDispWallet"></WalletModal>
-    </transition>
+      <SendModal :val="loginUser" @close="closeSendModal" @send="sendWallet" v-if="isDispSend"></SendModal>
+    </transition-group >
   </div>
 </template>
 
 <script>
 import firebase from 'firebase'
 import WalletModal from '@/components/WalletModal.vue'
+import SendModal from '@/components/SendModal.vue'
 export default {
   name: 'dashboard',
   data () {
@@ -37,6 +39,7 @@ export default {
         wallet: 0
       },
       isDispWallet: false,
+      isDispSend: false
     }
   },
   created() {
@@ -45,7 +48,8 @@ export default {
     this.otherUsers = users.otherUsers;
   },
   components: {
-    WalletModal
+    WalletModal,
+    SendModal
   },
   methods: {
     // ログアウト
@@ -66,6 +70,20 @@ export default {
     },
     closeWalletModal() {
       this.isDispWallet = false;
+    },
+    // Walletを送る
+    openSendModal(item) {
+      this.isDispSend = true;
+      this.otherUser = item;
+    },
+    closeSendModal() {
+      this.isDispSend = false;
+    },
+    sendWallet(val) {
+      const loginUser = {uid: this.loginUser.uid, wallet: this.loginUser.wallet - val};
+      const otherUser = {uid: this.otherUser.uid, wallet: this.otherUser.wallet + val};
+      this.$store.dispatch('updateWallet', {loginUser: loginUser, otherUser: otherUser});
+      this.closeSendModal();
     },
   }
 }
