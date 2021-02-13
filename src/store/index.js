@@ -18,12 +18,12 @@ export default createStore({
       state.otherUsers = val;
     },
     commitLoginUserWallet(state, val) {
-      state.loginUser.wallet = val;
+      state.loginUser.wallet -= val;
     },
-    commitOtherUserWallet(state, val) {
+    commitOtherUserWallet(state, {otherUserUid, sendWallet}) {
       state.otherUsers.find(user => {
-        if(user.uid === val.uid) {
-          user.wallet = val.wallet;
+        if(user.uid === otherUserUid) {
+          user.wallet += sendWallet;
         }
       });
     }
@@ -73,15 +73,20 @@ export default createStore({
     },
 
     // Walletを上書き
-    updateWallet({ commit }, {loginUser, otherUser}){
-      firebase.firestore().collection('users').doc(loginUser.uid).set({
-        wallet: loginUser.wallet
-      }, {merge: true});
-      firebase.firestore().collection('users').doc(otherUser.uid).set({
-        wallet: otherUser.wallet
-      }, {merge: true});
-      commit('commitLoginUserWallet', loginUser.wallet);
-      commit('commitOtherUserWallet', otherUser);
+    updateWallet({ commit }, {loginUserUid, otherUserUid, sendWallet}){
+      const db = firebase.firestore();
+      try {
+        db.collection('users').doc(loginUserUid).update({
+          wallet: firebase.firestore.FieldValue.increment(-sendWallet)
+        });
+        db.collection('users').doc(otherUserUid).update({
+          wallet: firebase.firestore.FieldValue.increment(sendWallet)
+        });
+        commit('commitLoginUserWallet', sendWallet);
+        commit('commitOtherUserWallet', {otherUserUid, sendWallet});
+      } catch (error) {
+        console.error(error.message);
+      }
     }
   },
   modules: {

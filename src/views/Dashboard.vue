@@ -80,9 +80,15 @@ export default {
       this.isDispSend = false;
     },
     sendWallet(val) {
-      const loginUser = {uid: this.loginUser.uid, wallet: this.loginUser.wallet - val};
-      const otherUser = {uid: this.otherUser.uid, wallet: this.otherUser.wallet + val};
-      this.$store.dispatch('updateWallet', {loginUser: loginUser, otherUser: otherUser});
+      if(val < 1 || !Number.isInteger(val)){
+        console.error('正の整数値を入力してください');
+        return
+      }
+      this.$store.dispatch('updateWallet', {
+        loginUserUid: this.loginUser.uid,
+        otherUserUid: this.otherUser.uid,
+        sendWallet: val
+      });
       this.closeSendModal();
     },
   }
