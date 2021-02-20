@@ -16,6 +16,16 @@ export default createStore({
     },
     commitOtherUsers(state, val) {
       state.otherUsers = val;
+    },
+    commitLoginUserWallet(state, val) {
+      state.loginUser.wallet -= val;
+    },
+    commitOtherUserWallet(state, {otherUserUid, sendWallet}) {
+      state.otherUsers.find(user => {
+        if(user.uid === otherUserUid) {
+          user.wallet += sendWallet;
+        }
+      });
     }
   },
   actions: {
@@ -61,6 +71,23 @@ export default createStore({
         throw error.message;
       }
     },
+
+    // Walletを上書き
+    updateWallet({ commit }, {loginUserUid, otherUserUid, sendWallet}){
+      const db = firebase.firestore();
+      try {
+        db.collection('users').doc(loginUserUid).update({
+          wallet: firebase.firestore.FieldValue.increment(-sendWallet)
+        });
+        db.collection('users').doc(otherUserUid).update({
+          wallet: firebase.firestore.FieldValue.increment(sendWallet)
+        });
+        commit('commitLoginUserWallet', sendWallet);
+        commit('commitOtherUserWallet', {otherUserUid, sendWallet});
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
   },
   modules: {
   },
